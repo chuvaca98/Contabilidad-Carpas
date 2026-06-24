@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Carpas & Eventos — Cotizador</title>
+<meta name="theme-color" content="#14594A" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Cotizador" />
+<style>
+  :root{
+    --canvas:#F7F4EE; --surface:#fff; --ink:#1C2526; --muted:#6E6A62;
+    --line:#E6E0D6; --primary:#14594A; --primaryDark:#0E4034;
+    --accent:#B8772A; --accentSoft:#F3E7D2; --danger:#B23A2E; --okSoft:#E2EFE9;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--canvas);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  header{position:sticky;top:0;z-index:20;background:var(--primary);color:#fff;
+    padding:14px 16px;display:flex;align-items:center;gap:10px;padding-top:max(14px,env(safe-area-inset-top))}
+  header .t1{font-weight:700;font-size:16px;line-height:1.1}
+  header .t2{font-size:12px;opacity:.85}
+  header .tent{font-size:20px}
+  .install-btn{margin-left:auto;background:rgba(255,255,255,.16);color:#fff;border:none;
+    border-radius:10px;padding:8px 12px;font-weight:700;font-size:13px;cursor:pointer}
+  main{max-width:720px;margin:0 auto;padding:16px;padding-bottom:120px;display:grid;gap:14px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px}
+  .h{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 12px}
+  label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;display:block;letter-spacing:.02em}
+  input,textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);
+    background:var(--surface);color:var(--ink);font-size:15px;outline:none;font-family:inherit}
+  input:focus,textarea:focus{border-color:var(--primary)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .est{margin-top:12px;background:var(--accentSoft);border:1px solid rgba(184,119,42,.25);border-radius:12px;padding:12px}
+  .est .et{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--accent);font-size:13px;margin-bottom:6px}
+  .est .eb{font-size:13px;line-height:1.6}
+  .search{position:relative;margin-bottom:10px}
+  .search svg{position:absolute;left:11px;top:11px;color:var(--muted)}
+  .search input{padding-left:36px}
+  .chips{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:2px}
+  .chip{white-space:nowrap;padding:6px 12px;border-radius:999px;font-size:13px;cursor:pointer;
+    border:1px solid var(--line);background:var(--surface);color:var(--muted);font-weight:600}
+  .chip.on{border-color:var(--primary);background:var(--primary);color:#fff}
+  .catrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;
+    border:1px solid var(--line);border-radius:12px;margin-bottom:8px}
+  .catrow .n{font-size:14px;font-weight:600}
+  .catrow .p{font-size:12px;color:var(--muted)}
+  .add{display:flex;align-items:center;gap:4px;background:var(--okSoft);color:var(--primary);border:none;
+    border-radius:10px;padding:8px 12px;font-weight:700;font-size:13px;cursor:pointer}
+  .empty{color:var(--muted);font-size:14px;text-align:center;margin:8px 0}
+  .line{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+  .line .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .line .nm{font-size:14px;font-weight:600}
+  .trash{background:none;border:none;color:var(--danger);cursor:pointer;padding:2px;display:flex}
+  .row2{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .stepper{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .stepper button{padding:8px 10px;background:var(--canvas);border:none;cursor:pointer;color:var(--ink);display:flex}
+  .stepper input{width:44px;text-align:center;border:none;border-radius:0;font-weight:600}
+  .priceWrap{flex:1;min-width:120px}
+  .priceWrap input{font-family:ui-monospace,monospace;font-size:14px;padding:8px 10px}
+  .priceWrap input.low{border-color:var(--danger)}
+  .vlist{font-size:11px;margin-top:3px;color:var(--muted)}
+  .vlist .down{color:var(--danger);font-weight:700}
+  .vlist .up{color:var(--primary);font-weight:700}
+  .sub{margin-left:auto;text-align:right;font-weight:700;font-size:15px;min-width:90px}
+  .bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--line);
+    padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));display:flex;align-items:center;
+    justify-content:space-between;gap:12px;box-shadow:0 -4px 16px rgba(0,0,0,.06)}
+  .bar .lbl{font-size:11px;color:var(--muted);font-weight:600}
+  .bar .tot{font-size:22px;font-weight:800;line-height:1}
+  .seeBtn{background:var(--primary);color:#fff;border:none;border-radius:12px;padding:12px 18px;font-weight:700;font-size:15px;cursor:pointer}
+  .seeBtn:disabled{background:var(--line);cursor:default}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:40;display:none;align-items:flex-end;justify-content:center}
+  .overlay.on{display:flex}
+  .sheet{background:var(--surface);width:100%;max-width:560px;max-height:90vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:20px}
+  .sheet h3{margin:0;font-size:18px;font-weight:800}
+  .xbtn{background:none;border:none;cursor:pointer;color:var(--muted);display:flex}
+  .rrow{display:flex;justify-content:space-between;gap:12px;font-size:14px}
+  .rrow .k{color:var(--muted)}
+  .rrow.big .k,.rrow.big .v{font-weight:800;font-size:17px;color:var(--ink)}
+  .acts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+  .wa{display:flex;justify-content:center;align-items:center;gap:8px;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:12px;font-weight:700;font-size:15px;cursor:pointer}
+  .pr{display:flex;justify-content:center;align-items:center;gap:8px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px;font-weight:700;font-size:15px;cursor:pointer}
+  .pkg{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+  .pkg .pn{font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px}
+  .pkg .pd{font-size:12px;color:var(--muted);margin:5px 0 10px;line-height:1.45}
+  .pkg .pf{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .pkg .pp{font-weight:700;font-size:14px}
+  .pkg .pp small{color:var(--muted);font-weight:500}
+  .loadBtn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:9px 16px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;background:var(--ink);color:#fff;
+    padding:10px 18px;border-radius:999px;font-size:14px;font-weight:600;z-index:50;opacity:0;
+    transition:opacity .25s;pointer-events:none;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+  .toast.on{opacity:1}
+  @media print{
+    body *{visibility:hidden}
+    .printable,.printable *{visibility:visible}
+    .printable{position:absolute;left:0;top:0;width:100%;max-width:100%;box-shadow:none;border-radius:0}
+    .no-print{display:none!important}
+    .overlay{position:static;background:none;display:block}
+  }
+</style>
+</head>
+<body>
+<header>
+  <span class="tent">⛺</span>
+  <div><div class="t1">Carpas &amp; Eventos</div><div class="t2">Nueva cotización</div></div>
+  <button class="install-btn" id="installBtn" style="display:none">Instalar app</button>
+</header>
+<main id="app"></main>
+
+<div class="bar no-print">
+  <div><div class="lbl">TOTAL</div><div class="tot mono" id="barTotal">$ 0</div></div>
+  <button class="seeBtn" id="seeBtn" disabled>Ver resumen</button>
+</div>
+
+<div class="overlay" id="overlay"><div class="sheet printable" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------- datos ---------------- */
+const CATALOGO = [
+  {id:"c1",categoria:"Carpas",nombre:"Carpa 3×3 (9 m²)",unidad:"unidad",precioLista:180000},
+  {id:"c2",categoria:"Carpas",nombre:"Carpa 6×6 (36 m²)",unidad:"unidad",precioLista:450000},
+  {id:"c3",categoria:"Carpas",nombre:"Carpa 6×12 (72 m²)",unidad:"unidad",precioLista:820000},
+  {id:"c4",categoria:"Carpas",nombre:"Carpa 10×10 (100 m²)",unidad:"unidad",precioLista:1200000},
+  {id:"c5",categoria:"Carpas",nombre:"Carpa tipo pico / beduina (m²)",unidad:"m²",precioLista:18000},
+  {id:"p1",categoria:"Pisos y tarima",nombre:"Piso modular (m²)",unidad:"m²",precioLista:22000},
+  {id:"p2",categoria:"Pisos y tarima",nombre:"Tarima / escenario (m²)",unidad:"m²",precioLista:38000},
+  {id:"p3",categoria:"Pisos y tarima",nombre:"Pista de baile iluminada (m²)",unidad:"m²",precioLista:45000},
+  {id:"m1",categoria:"Mobiliario",nombre:"Mesa redonda (10 pax)",unidad:"unidad",precioLista:25000},
+  {id:"m2",categoria:"Mobiliario",nombre:"Mesa rectangular",unidad:"unidad",precioLista:20000},
+  {id:"m3",categoria:"Mobiliario",nombre:"Silla Tiffany",unidad:"unidad",precioLista:4500},
+  {id:"m4",categoria:"Mobiliario",nombre:"Silla plástica",unidad:"unidad",precioLista:2000},
+  {id:"t1",categoria:"Mantelería",nombre:"Mantel redondo",unidad:"unidad",precioLista:12000},
+  {id:"t2",categoria:"Mantelería",nombre:"Forro de silla",unidad:"unidad",precioLista:2500},
+  {id:"t3",categoria:"Mantelería",nombre:"Camino de mesa",unidad:"unidad",precioLista:6000},
+  {id:"i1",categoria:"Iluminación y clima",nombre:"Cadena de luces (metro)",unidad:"m²",precioLista:4000},
+  {id:"i2",categoria:"Iluminación y clima",nombre:"Reflector LED",unidad:"unidad",precioLista:35000},
+  {id:"i3",categoria:"Iluminación y clima",nombre:"Ventilador industrial",unidad:"unidad",precioLista:80000},
+  {id:"i4",categoria:"Iluminación y clima",nombre:"Calefactor de exterior",unidad:"unidad",precioLista:110000},
+];
+const CATEGORIAS = ["Todas",...[...new Set(CATALOGO.map(i=>i.categoria))]];
+const cop = n => new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(isFinite(n)?n:0);
+
+const PAQUETES = [
+  {id:"boda", emoji:"💍", nombre:"Boda 100 personas",
+   desc:"Carpa 10×10 con pista iluminada, tarima para mesa principal, 10 mesas redondas, 100 sillas Tiffany, mantelería completa e iluminación ambiental.",
+   items:[
+     {itemId:"c4",cantidad:1},{itemId:"p3",cantidad:30},{itemId:"p2",cantidad:12},
+     {itemId:"m1",cantidad:10},{itemId:"m3",cantidad:100},{itemId:"t1",cantidad:10},
+     {itemId:"t2",cantidad:100},{itemId:"t3",cantidad:10},{itemId:"i2",cantidad:6},{itemId:"i1",cantidad:40},
+   ]},
+  {id:"grado", emoji:"🎓", nombre:"Grado / fiesta 50 personas",
+   desc:"Carpa 6×12 con pista, 5 mesas redondas, 50 sillas Tiffany, mantelería y luces.",
+   items:[
+     {itemId:"c3",cantidad:1},{itemId:"p3",cantidad:16},{itemId:"m1",cantidad:5},
+     {itemId:"m3",cantidad:50},{itemId:"t1",cantidad:5},{itemId:"t2",cantidad:50},
+     {itemId:"i2",cantidad:4},{itemId:"i1",cantidad:24},
+   ]},
+  {id:"empresarial", emoji:"🏢", nombre:"Empresarial 200 personas",
+   desc:"Dos carpas 10×10, tarima para conferencia, 25 mesas rectangulares, 200 sillas y climatización.",
+   items:[
+     {itemId:"c4",cantidad:2},{itemId:"p2",cantidad:20},{itemId:"m2",cantidad:25},
+     {itemId:"m4",cantidad:200},{itemId:"t2",cantidad:200},{itemId:"i2",cantidad:8},{itemId:"i3",cantidad:6},
+   ]},
+];
+const totalPaquete = p => p.items.reduce((s,it)=>{const c=CATALOGO.find(x=>x.id===it.itemId);return s+(c?c.precioLista*it.cantidad:0);},0);
+
+/* ---------------- estado ---------------- */
+const DEFAULT = {
+  cliente:{nombre:"",documento:"",telefono:"",direccion:""},
+  evento:{fecha:"",ubicacion:"",invitados:""},
+  lineas:[], cargos:{transporte:0,montaje:0},
+  ajustes:{descuentoPct:0,ivaPct:19,anticipoPct:50,vigenciaDias:8}, notas:""
+};
+let S, filtro="Todas", busca="";
+try{ S = JSON.parse(localStorage.getItem("cotizacion")) || structuredClone(DEFAULT); }
+catch(e){ S = structuredClone(DEFAULT); }
+const save = ()=>{ try{ localStorage.setItem("cotizacion",JSON.stringify(S)); }catch(e){} };
+
+/* ---------------- cálculos ---------------- */
+function calc(){
+  const subtotalItems = S.lineas.reduce((s,l)=>s+l.cantidad*l.precioPactado,0);
+  const conCargos = subtotalItems + (+S.cargos.transporte||0) + (+S.cargos.montaje||0);
+  const descuento = conCargos * ((+S.ajustes.descuentoPct||0)/100);
+  const base = conCargos - descuento;
+  const iva = base * ((+S.ajustes.ivaPct||0)/100);
+  const total = base + iva;
+  const anticipo = total * ((+S.ajustes.anticipoPct||0)/100);
+  return {subtotalItems,conCargos,descuento,base,iva,total,anticipo,saldo:total-anticipo};
+}
+function estimar(){
+  const n = parseInt(S.evento.invitados,10);
+  if(!n||n<=0) return null;
+  const banquete=Math.ceil(n*1.2), coctel=Math.ceil(n*0.8), conPista=Math.ceil(n*1.5);
+  const sug = conPista<=36?"Carpa 6×6":conPista<=72?"Carpa 6×12":conPista<=100?"Carpa 10×10":conPista+" m² (varias carpas)";
+  return {banquete,coctel,conPista,sug};
+}
+
+/* ---------------- iconos svg ---------------- */
+const ic = {
+  search:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>',
+  plus:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5v14"/></svg>',
+  minus:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg>',
+  trash:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>',
+  x:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  send:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>',
+  print:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z"/></svg>',
+};
+
+/* ---------------- render estructura ---------------- */
+function mount(){
+  const a=document.getElementById("app");
+  a.innerHTML = `
+  <section class="card">
+    <h2 class="h">Cliente y evento</h2>
+    <div style="display:grid;gap:10px">
+      <div><label>Nombre del cliente</label><input id="cl_nombre" placeholder="Ej: Laura Gómez"></div>
+      <div class="grid2">
+        <div><label>Cédula / NIT</label><input id="cl_doc" placeholder="900.123.456-7" inputmode="numeric"></div>
+        <div><label>WhatsApp</label><input id="cl_tel" placeholder="300 123 4567" inputmode="tel"></div>
+      </div>
+      <div class="grid2">
+        <div><label>Invitados</label><input id="ev_inv" placeholder="80" inputmode="numeric"></div>
+        <div><label>Fecha del evento</label><input id="ev_fecha" placeholder="15 ago 2026"></div>
+      </div>
+      <div><label>Ubicación</label><input id="ev_ubi" placeholder="Finca, vereda..."></div>
+    </div>
+    <div id="estimador"></div>
+  </section>
+
+  <section class="card">
+    <h2 class="h">Paquetes prearmados</h2>
+    <div id="paquetes"></div>
+  </section>
+
+  <section class="card">
+    <h2 class="h">Catálogo</h2>
+    <div class="search">${ic.search}<input id="busca" placeholder="Buscar ítem..."></div>
+    <div class="chips" id="chips"></div>
+    <div id="catList"></div>
+  </section>
+
+  <section class="card">
+    <h2 class="h" id="hLineas">Cotización (0)</h2>
+    <div id="lineas"></div>
+  </section>
+
+  <section class="card">
+    <h2 class="h">Cargos y ajustes</h2>
+    <div class="grid2">
+      <div><label>Transporte</label><input class="mono" id="cg_tr" inputmode="numeric"></div>
+      <div><label>Montaje / desmontaje</label><input class="mono" id="cg_mo" inputmode="numeric"></div>
+      <div><label>Descuento %</label><input class="mono" id="aj_desc" inputmode="numeric"></div>
+      <div><label>IVA %</label><input class="mono" id="aj_iva" inputmode="numeric"></div>
+      <div><label>Anticipo %</label><input class="mono" id="aj_ant" inputmode="numeric"></div>
+      <div><label>Vigencia (días)</label><input class="mono" id="aj_vig" inputmode="numeric"></div>
+    </div>
+    <div style="margin-top:10px"><label>Notas / términos</label>
+      <textarea id="notas" style="min-height:64px;resize:vertical" placeholder="Ej: incluye instalación. No incluye permisos."></textarea></div>
+  </section>`;
+
+  // valores iniciales
+  v("cl_nombre",S.cliente.nombre); v("cl_doc",S.cliente.documento); v("cl_tel",S.cliente.telefono);
+  v("ev_inv",S.evento.invitados); v("ev_fecha",S.evento.fecha); v("ev_ubi",S.evento.ubicacion);
+  v("cg_tr",S.cargos.transporte); v("cg_mo",S.cargos.montaje);
+  v("aj_desc",S.ajustes.descuentoPct); v("aj_iva",S.ajustes.ivaPct);
+  v("aj_ant",S.ajustes.anticipoPct); v("aj_vig",S.ajustes.vigenciaDias); v("notas",S.notas);
+
+  // listeners superiores (no rebuild)
+  bind("cl_nombre",x=>S.cliente.nombre=x); bind("cl_doc",x=>S.cliente.documento=x); bind("cl_tel",x=>S.cliente.telefono=x);
+  bind("ev_fecha",x=>S.evento.fecha=x); bind("ev_ubi",x=>S.evento.ubicacion=x);
+  bind("ev_inv",x=>{S.evento.invitados=x; renderEstimador();});
+  bind("cg_tr",x=>{S.cargos.transporte=+x||0; updateTotals();});
+  bind("cg_mo",x=>{S.cargos.montaje=+x||0; updateTotals();});
+  bind("aj_desc",x=>{S.ajustes.descuentoPct=+x||0; updateTotals();});
+  bind("aj_iva",x=>{S.ajustes.ivaPct=+x||0; updateTotals();});
+  bind("aj_ant",x=>{S.ajustes.anticipoPct=+x||0; updateTotals();});
+  bind("aj_vig",x=>{S.ajustes.vigenciaDias=+x||0;});
+  bind("notas",x=>S.notas=x);
+
+  document.getElementById("busca").addEventListener("input",e=>{busca=e.target.value;renderCat();});
+  renderChips(); renderCat(); renderPaquetes(); renderLineas(); renderEstimador(); updateTotals();
+}
+const v=(id,val)=>{const el=document.getElementById(id); if(el)el.value=val;};
+const bind=(id,fn)=>{document.getElementById(id).addEventListener("input",e=>{fn(e.target.value);save();});};
+
+function renderChips(){
+  document.getElementById("chips").innerHTML = CATEGORIAS.map(c=>
+    `<button class="chip ${c===filtro?'on':''}" data-cat="${c}">${c}</button>`).join("");
+  document.querySelectorAll("#chips .chip").forEach(b=>b.onclick=()=>{filtro=b.dataset.cat;renderChips();renderCat();});
+}
+function renderCat(){
+  const list = CATALOGO.filter(i=>(filtro==="Todas"||i.categoria===filtro) && i.nombre.toLowerCase().includes(busca.toLowerCase()));
+  document.getElementById("catList").innerHTML = list.map(i=>
+    `<div class="catrow"><div><div class="n">${i.nombre}</div><div class="p mono">${cop(i.precioLista)} / ${i.unidad}</div></div>
+     <button class="add" data-id="${i.id}">${ic.plus} Agregar</button></div>`).join("");
+  document.querySelectorAll("#catList .add").forEach(b=>b.onclick=()=>agregar(b.dataset.id));
+}
+function agregar(id){
+  const item = CATALOGO.find(i=>i.id===id);
+  const ex = S.lineas.find(l=>l.itemId===id);
+  if(ex) ex.cantidad++;
+  else S.lineas.push({key:id+"-"+Date.now(),itemId:id,nombre:item.nombre,unidad:item.unidad,
+    cantidad:1,precioLista:item.precioLista,precioPactado:item.precioLista});
+  save(); renderLineas(); updateTotals();
+}
+function renderPaquetes(){
+  document.getElementById("paquetes").innerHTML = PAQUETES.map(p=>
+    `<div class="pkg"><div class="pn">${p.emoji} ${p.nombre}</div>
+      <div class="pd">${p.desc}</div>
+      <div class="pf">
+        <div class="pp mono">${cop(totalPaquete(p))} <small>· ${p.items.length} ítems</small></div>
+        <button class="loadBtn" data-pkg="${p.id}">Cargar paquete</button>
+      </div></div>`).join("");
+  document.querySelectorAll("#paquetes .loadBtn").forEach(b=>b.onclick=()=>cargarPaquete(b.dataset.pkg));
+}
+function cargarPaquete(id){
+  const p = PAQUETES.find(x=>x.id===id); if(!p) return;
+  p.items.forEach(it=>{
+    const item = CATALOGO.find(c=>c.id===it.itemId); if(!item) return;
+    const ex = S.lineas.find(l=>l.itemId===it.itemId);
+    if(ex) ex.cantidad += it.cantidad;
+    else S.lineas.push({key:it.itemId+"-"+Date.now()+Math.random(),itemId:it.itemId,nombre:item.nombre,
+      unidad:item.unidad,cantidad:it.cantidad,precioLista:item.precioLista,precioPactado:item.precioLista});
+  });
+  save(); renderLineas(); updateTotals();
+  toast(`Paquete "${p.nombre}" cargado`);
+  document.getElementById("hLineas").scrollIntoView({behavior:"smooth",block:"start"});
+}
+let toastT=null;
+function toast(msg){
+  const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("on");
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("on"),2200);
+}
+function renderLineas(){
+  const c=document.getElementById("lineas");
+  document.getElementById("hLineas").textContent=`Cotización (${S.lineas.length})`;
+  if(!S.lineas.length){c.innerHTML=`<p class="empty">Agrega ítems del catálogo para empezar.</p>`;return;}
+  c.innerHTML = S.lineas.map(l=>{
+    const dif=l.precioPactado-l.precioLista, pct=l.precioLista?Math.round(dif/l.precioLista*100):0;
+    const tag = dif!==0?`<span class="${dif<0?'down':'up'}">${dif<0?'▼':'▲'} ${pct}%</span>`:"";
+    return `<div class="line" data-key="${l.key}">
+      <div class="top"><div class="nm">${l.nombre}</div><button class="trash" data-act="del">${ic.trash}</button></div>
+      <div class="row2">
+        <div class="stepper">
+          <button data-act="dec">${ic.minus}</button>
+          <input class="qty" inputmode="numeric" value="${l.cantidad}">
+          <button data-act="inc">${ic.plus}</button>
+        </div>
+        <span style="color:var(--muted);font-size:13px">×</span>
+        <div class="priceWrap">
+          <input class="price mono ${dif<0?'low':''}" inputmode="numeric" value="${l.precioPactado}">
+          <div class="vlist mono">Lista: ${cop(l.precioLista)} <span class="vtag">${tag}</span></div>
+        </div>
+        <div class="sub mono">${cop(l.cantidad*l.precioPactado)}</div>
+      </div></div>`;
+  }).join("");
+  // listeners por línea (in-place)
+  S.lineas.forEach(l=>{
+    const el=c.querySelector(`[data-key="${l.key}"]`);
+    el.querySelector('[data-act="del"]').onclick=()=>{S.lineas=S.lineas.filter(x=>x.key!==l.key);save();renderLineas();updateTotals();};
+    el.querySelector('[data-act="inc"]').onclick=()=>{l.cantidad++;refreshLine(el,l);};
+    el.querySelector('[data-act="dec"]').onclick=()=>{l.cantidad=Math.max(1,l.cantidad-1);refreshLine(el,l);};
+    el.querySelector('.qty').addEventListener("input",e=>{l.cantidad=Math.max(1,parseInt(e.target.value||"1",10));refreshLine(el,l,true);});
+    el.querySelector('.price').addEventListener("input",e=>{l.precioPactado=Math.max(0,+e.target.value||0);refreshLine(el,l,true);});
+  });
+}
+function refreshLine(el,l,skipInputs){
+  const dif=l.precioPactado-l.precioLista, pct=l.precioLista?Math.round(dif/l.precioLista*100):0;
+  if(!skipInputs) el.querySelector('.qty').value=l.cantidad;
+  const price=el.querySelector('.price'); price.classList.toggle('low',dif<0);
+  el.querySelector('.vtag').innerHTML = dif!==0?`<span class="${dif<0?'down':'up'}">${dif<0?'▼':'▲'} ${pct}%</span>`:"";
+  el.querySelector('.sub').textContent=cop(l.cantidad*l.precioPactado);
+  save(); updateTotals();
+}
+function renderEstimador(){
+  const e=estimar(), box=document.getElementById("estimador");
+  if(!e){box.innerHTML="";return;}
+  box.innerHTML=`<div class="est"><div class="et">📐 Estimador de carpa para ${S.evento.invitados} invitados</div>
+    <div class="eb">Banquete sentado: <b>${e.banquete} m²</b> · Coctel de pie: <b>${e.coctel} m²</b><br>
+    Con pista/escenario: <b>${e.conPista} m²</b> → sugerencia: <b>${e.sug}</b></div></div>`;
+}
+function updateTotals(){
+  const t=calc();
+  document.getElementById("barTotal").textContent=cop(t.total);
+  const btn=document.getElementById("seeBtn"); btn.disabled=S.lineas.length===0;
+  if(document.getElementById("overlay").classList.contains("on")) renderSheet();
+}
+
+/* ---------------- resumen ---------------- */
+function renderSheet(){
+  const t=calc(), a=S.ajustes;
+  const lines = S.lineas.map(l=>row(`${l.cantidad}× ${l.nombre}`,cop(l.cantidad*l.precioPactado))).join("");
+  document.getElementById("sheet").innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h3>Resumen de cotización</h3><button class="xbtn no-print" id="closeX">${ic.x}</button></div>
+    <div style="margin-bottom:8px;font-size:13px;color:var(--muted)">
+      ${S.cliente.nombre?`Cliente: <b style="color:var(--ink)">${S.cliente.nombre}</b><br>`:""}
+      ${S.cliente.documento?`C.C./NIT: ${S.cliente.documento}<br>`:""}
+      ${S.evento.fecha?`Evento: ${S.evento.fecha}${S.evento.ubicacion?" · "+S.evento.ubicacion:""}`:""}</div>
+    <div class="mono" style="display:grid;gap:6px">
+      ${lines}
+      <div style="border-top:1px solid var(--line);margin:6px 0"></div>
+      ${row("Subtotal ítems",cop(t.subtotalItems))}
+      ${S.cargos.transporte?row("Transporte",cop(S.cargos.transporte)):""}
+      ${S.cargos.montaje?row("Montaje / desmontaje",cop(S.cargos.montaje)):""}
+      ${a.descuentoPct?row(`Descuento ${a.descuentoPct}%`,"-"+cop(t.descuento)):""}
+      ${a.ivaPct?row(`IVA ${a.ivaPct}%`,cop(t.iva)):""}
+      <div style="border-top:2px solid var(--ink);margin:6px 0"></div>
+      ${row("TOTAL",cop(t.total),true)}
+      ${row(`Anticipo ${a.anticipoPct}%`,cop(t.anticipo))}
+      ${row("Saldo contra entrega",cop(t.saldo))}
+    </div>
+    <div style="margin-top:12px;color:var(--accent);font-size:13px">⚠ Cotización válida por ${a.vigenciaDias} días.${S.notas?"<br>"+S.notas:""}</div>
+    <div class="acts no-print">
+      <button class="wa" id="waBtn">${ic.send} WhatsApp</button>
+      <button class="pr" id="prBtn">${ic.print} PDF / Imprimir</button>
+    </div>`;
+  document.getElementById("closeX").onclick=closeSheet;
+  document.getElementById("prBtn").onclick=()=>window.print();
+  document.getElementById("waBtn").onclick=waSend;
+}
+const row=(k,v,big)=>`<div class="rrow ${big?'big':''}"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+function openSheet(){ if(!S.lineas.length)return; renderSheet(); document.getElementById("overlay").classList.add("on"); }
+function closeSheet(){ document.getElementById("overlay").classList.remove("on"); }
+function waSend(){
+  const t=calc(),a=S.ajustes;
+  const L=S.lineas.map(l=>`• ${l.cantidad}× ${l.nombre} — ${cop(l.cantidad*l.precioPactado)}`).join("\n");
+  const msg=["*COTIZACIÓN — Carpas & Eventos*",
+    S.cliente.nombre?`Cliente: ${S.cliente.nombre}`:null,
+    S.cliente.documento?`C.C./NIT: ${S.cliente.documento}`:null,
+    S.evento.fecha?`Evento: ${S.evento.fecha}${S.evento.ubicacion?" · "+S.evento.ubicacion:""}`:null,"",
+    L||"(sin ítems)","",
+    S.cargos.transporte?`Transporte: ${cop(S.cargos.transporte)}`:null,
+    S.cargos.montaje?`Montaje: ${cop(S.cargos.montaje)}`:null,
+    a.descuentoPct?`Descuento ${a.descuentoPct}%: -${cop(t.descuento)}`:null,
+    a.ivaPct?`IVA ${a.ivaPct}%: ${cop(t.iva)}`:null,
+    `*TOTAL: ${cop(t.total)}*`,`Anticipo (${a.anticipoPct}%): ${cop(t.anticipo)}`,`Saldo: ${cop(t.saldo)}`,"",
+    `Vigencia: ${a.vigenciaDias} días.`].filter(Boolean).join("\n");
+  const tel=(S.cliente.telefono||"").replace(/\D/g,"");
+  window.open(`https://wa.me/${tel?"57"+tel:""}?text=${encodeURIComponent(msg)}`,"_blank");
+}
+document.getElementById("seeBtn").onclick=openSheet;
+document.getElementById("overlay").onclick=e=>{ if(e.target.id==="overlay") closeSheet(); };
+
+/* ---------------- PWA: service worker + instalación ---------------- */
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+let deferred=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;
+  const b=document.getElementById("installBtn"); b.style.display="block";
+  b.onclick=async()=>{ b.style.display="none"; deferred.prompt(); await deferred.userChoice; deferred=null; };
+});
+
+mount();
+</script>
+</body>
+</html>
